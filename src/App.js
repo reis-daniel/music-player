@@ -15,9 +15,8 @@ function App() {
   // !useRef -> to get HTML Audio Element
   const audioRef = useRef(null);
 
-  // Event Handler um songInfo zu aktualisieren -> currentTime + duration setzen.
+  // Event Handler
   const timeUpdateHandler = (e) => {
-    // !e.target ist hier das Audio-Tag!
     const current = e.target.currentTime;
     const duration = e.target.duration;
     const roundedCurrent = Math.round(current);
@@ -25,9 +24,6 @@ function App() {
     const animationPercentage = Math.round(
       (roundedCurrent / roundedDuration) * 100
     );
-
-    // Via Spread werden die aktuellen Daten des Objektes beibehalten
-    // currentTime und duration werden aktualisiert.
     setSongInfo({
       ...songInfo,
       currentTime: current,
@@ -36,17 +32,35 @@ function App() {
     });
   };
 
+  const skipTrackHandler = async (direction) => {
+    let currentIndex = songs.findIndex((song) => song.id === currentSong.id);
+    if (direction === "skip-forward") {
+      await setCurrentSong(
+        songs[currentIndex + 1 === songs.length ? 0 : currentIndex + 1]
+      );
+    }
+    if (direction === "skip-back") {
+      await setCurrentSong(
+        songs[currentIndex === 0 ? songs.length - 1 : currentIndex - 1]
+      );
+    }
+    if (isPlaying) {
+      const playPromise = audioRef.current.play();
+      playPromise.catch(() => {
+        audioRef.current.play();
+      });
+    }
+  };
+
   // States:
   const [songInfo, setSongInfo] = useState({
     currentTime: 0,
     duration: 0,
     animationPercentage: 0,
   });
-  // State erhält Array aus data.js, indem alle Songs als Objekt hinterlegt sind.
+
   const [songs, setSongs] = useState(data());
-  // Aktuelle Song sollte songs mit active = true sein.
   const [currentSong, setCurrentSong] = useState(songs[0]);
-  // Ist ein Song aktiv am laufen? Default auf false!
   const [isPlaying, setIsPlaying] = useState(false);
   const [libraryStatus, setLibraryStatus] = useState(false);
 
@@ -64,6 +78,7 @@ function App() {
         setSongInfo={setSongInfo}
         songs={songs}
         setSongs={setSongs}
+        skipTrackHandler={skipTrackHandler}
       />
       <Library
         audioRef={audioRef}
@@ -75,11 +90,12 @@ function App() {
       />
       <audio
         onTimeUpdate={timeUpdateHandler}
-        // !OnLoadedMetadata wird genutzt, damit
-        // !die duration beim Laden der Seite direkt gesetzt wird!
         onLoadedMetadata={timeUpdateHandler}
         ref={audioRef}
         src={currentSong.audio}
+        onEnded={() => {
+          skipTrackHandler("skip-forward");
+        }}
       ></audio>
     </div>
   );

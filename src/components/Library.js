@@ -19,7 +19,6 @@ const Library = ({
             song={song}
             songs={songs}
             setCurrentSong={setCurrentSong}
-            // Hier werden die ID des Song als prop an LibrarySong übergeben.
             id={song.id}
             key={song.id}
             audioRef={audioRef}

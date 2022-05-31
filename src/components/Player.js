@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { playAudio } from "../util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlay,
@@ -18,6 +17,7 @@ const Player = ({
   setSongInfo,
   songs,
   setSongs,
+  skipTrackHandler,
 }) => {
   // UseEffect
   useEffect(() => {
@@ -30,13 +30,9 @@ const Player = ({
     });
     setSongs(newSongs);
   }, [currentSong]);
+
   // Event Handlers
   const playSongHandler = () => {
-    /* .play() und pause() -> Funktionen von <audio>.
-    1. Wenn der State isPlaying = true -> pause(). 
-    2. Wenn isPlaying=false -> play(). 
-    !Wichtig ist, dass wir den State in beiden Conditions aktualisieren! */
-
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(!isPlaying);
@@ -46,55 +42,30 @@ const Player = ({
     }
   };
 
-  // Event Handler um Zeiten zu formattieren.
   const getTime = (time) => {
     return (
       Math.floor(time / 60) + ":" + ("0" + Math.floor(time % 60)).slice(-2)
     );
   };
-  // Event Handler für das Range-Input
+
   const dragHandler = (e) => {
-    // !e.target.value besitzt den ausgewählten input-value
-    // audioRef mit dem Wert aktualisieren, damit der Song auch zu der entsprechenden Stelle springt.
     audioRef.current.currentTime = e.target.value;
-    // State ändern: songInfo -> setSongInfo der currentTime wird auf e.target.value gesetzt.
     setSongInfo({ ...songInfo, currentTime: e.target.value });
   };
-
-  // Async Event Handler damit die Music erst abgespielt wird, wenn setCurrentSong fertig ist.
-  async function skipTrackHandler(direction) {
-    // Position des aktuellen Liedes im songs-Array finden.
-    let currentIndex = songs.findIndex((song) => song.id === currentSong.id);
-    // Bei onClick wird die direction mitgegeben.
-    if (direction === "skip-forward") {
-      // Auf setCurrentSong warten.
-      await setCurrentSong(
-        songs[currentIndex + 1 === songs.length ? 0 : currentIndex + 1]
-      );
-    }
-    if (direction === "skip-back") {
-      await setCurrentSong(
-        songs[currentIndex === 0 ? songs.length - 1 : currentIndex - 1]
-      );
-    }
-    playAudio(isPlaying, audioRef);
-  }
 
   // Styles
   const trackAnim = {
     transform: `translateX(${songInfo.animationPercentage}%)`,
+  };
+  const linearGrad = {
+    background: `linear-gradient(to right, ${currentSong.color[0]},${currentSong.color[1]} )`,
   };
 
   return (
     <div className="player">
       <div className="time-control">
         <p>{getTime(songInfo.currentTime)}</p>
-        <div
-          className="track"
-          style={{
-            background: `linear-gradient(to right, ${currentSong.color[0]},${currentSong.color[1]} )`,
-          }}
-        >
+        <div className="track" style={linearGrad}>
           <input
             type="range"
             min={0}

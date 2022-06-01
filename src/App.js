@@ -12,10 +12,20 @@ import data from "./data";
 
 function App() {
   // Ref:
-  // !useRef -> to get HTML Audio Element
   const audioRef = useRef(null);
 
   // Event Handler
+  const activeLibraryHandler = (nextPrev) => {
+    const newSongs = songs.map((song) => {
+      if (song.id === nextPrev.id) {
+        return { ...song, active: true };
+      } else {
+        return { ...song, active: false };
+      }
+    });
+    setSongs(newSongs);
+  };
+
   const timeUpdateHandler = (e) => {
     const current = e.target.currentTime;
     const duration = e.target.duration;
@@ -38,9 +48,15 @@ function App() {
       await setCurrentSong(
         songs[currentIndex + 1 === songs.length ? 0 : currentIndex + 1]
       );
+      activeLibraryHandler(
+        songs[currentIndex + 1 === songs.length ? 0 : currentIndex + 1]
+      );
     }
     if (direction === "skip-back") {
       await setCurrentSong(
+        songs[currentIndex === 0 ? songs.length - 1 : currentIndex - 1]
+      );
+      activeLibraryHandler(
         songs[currentIndex === 0 ? songs.length - 1 : currentIndex - 1]
       );
     }
@@ -65,7 +81,7 @@ function App() {
   const [libraryStatus, setLibraryStatus] = useState(false);
 
   return (
-    <div className="App">
+    <div className={`App ${libraryStatus ? "library-active" : ""}`}>
       <Nav libraryStatus={libraryStatus} setLibraryStatus={setLibraryStatus} />
       <Song currentSong={currentSong} />
       <Player
@@ -79,6 +95,7 @@ function App() {
         songs={songs}
         setSongs={setSongs}
         skipTrackHandler={skipTrackHandler}
+        activeLibraryHandler={activeLibraryHandler}
       />
       <Library
         audioRef={audioRef}
